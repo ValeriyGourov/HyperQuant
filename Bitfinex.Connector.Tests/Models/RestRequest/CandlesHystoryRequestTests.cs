@@ -4,7 +4,7 @@ using Bitfinex.Connector.Models;
 using Bitfinex.Connector.Models.RestRequest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Bitfinex.Connector.Tests.Models.Request
+namespace Bitfinex.Connector.Tests.Models.RestRequest
 {
     [TestClass]
     public class CandlesHystoryRequestTests
