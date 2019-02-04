@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -15,6 +17,11 @@ namespace Bitfinex.Connector.Models.Request
     /// <typeparam name="T">Модель данных, на которую должны проецироваться полученные от сервера данные.</typeparam>
     internal abstract class RequestBase<T>
     {
+        /// <summary>
+        /// Кэш параметров запроса. Используется для предотвращения использования рефлексии при выполнении каждого запроса.
+        /// </summary>
+        private static readonly ConcurrentDictionary<Type, List<QueryParametersCasheItem>> _queryParametersCashe = new ConcurrentDictionary<Type, List<QueryParametersCasheItem>>();
+
         /// <summary>
         /// Имя сегмента конечно точки запроса.
         /// </summary>
@@ -50,6 +57,8 @@ namespace Bitfinex.Connector.Models.Request
         /// </summary>
         protected RequestBase()
         {
+            InitQueryParametersCashe();
+
             _request = new RestRequest();
         }
 
@@ -156,43 +165,24 @@ namespace Bitfinex.Connector.Models.Request
         }
 
         /// <summary>
-        /// Выполняет поиск всех свойств класса с атрибутом <see cref="QueryParameterAttribute"/> и добавляет непустые значения этих свойств к параметрам HTTP-запроса.
+        /// Добавляет непустые значения параметров запроса к самому HTTP-запроса.
         /// </summary>
         private void AddQueryParameters()
         {
-            // TODO: Здесь можно закешировать получение набора свойств для каждого конкретного типа запросов.
-            var parameters =
-                from propertyInfo in GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                let attributesArray = propertyInfo.GetCustomAttributes(typeof(QueryParameterAttribute), true)
-                where attributesArray.Length == 1
-                let attribute = attributesArray[0] as QueryParameterAttribute
-                select new
-                {
-                    Name = string.IsNullOrWhiteSpace(attribute.Name) ? propertyInfo.Name : attribute.Name,
-                    attribute.ParameterType,
-                    Value = propertyInfo.GetValue(this)
-                };
-            foreach (var parameter in parameters)
-            {
-                AddQueryParameter(parameter.ParameterType, parameter.Name, parameter.Value);
-            }
+            _queryParametersCashe.TryGetValue(GetType(), out List<QueryParametersCasheItem> casheItems);
+            casheItems.ForEach(item => AddQueryParameter(item));
         }
 
         /// <summary>
         /// Добавляет новый параметр (строка запроса, путь) HTTP-запроса. Если значение параметра пустое - параметр не добавляется.
         /// </summary>
-        /// <param name="parameterType">Тип параметра.</param>
-        /// <param name="name">Имя параметра.</param>
-        /// <param name="value">Значение параметра.</param>
-        private void AddQueryParameter(QueryParameterType parameterType, string name, object value)
+        /// <param name="casheItem">Элемент кэша параметров запроса, описывающий конкретный параметр.</param>
+        private void AddQueryParameter(QueryParametersCasheItem casheItem)
         {
+            object value = casheItem.PropertyInfo.GetValue(this);
             if (value == null)
             {
                 return;
-            }
-            if (string.IsNullOrEmpty(name))
-            {
-                throw new ArgumentNullException(nameof(name));
             }
 
             object GetDefaultValue(Type type)
@@ -214,7 +204,7 @@ namespace Bitfinex.Connector.Models.Request
             if (!value.Equals(GetDefaultValue(value.GetType())))
             {
                 ParameterType requestParameterType;
-                switch (parameterType)
+                switch (casheItem.ParameterType)
                 {
                     case QueryParameterType.QueryString:
                         requestParameterType = ParameterType.QueryString;
@@ -226,8 +216,35 @@ namespace Bitfinex.Connector.Models.Request
                         throw new ApplicationException("Неизвестный тип параметров запроса.");
                 }
 
-                _request.AddParameter(name.ToLowerInvariant(), ValueToQueryParameter(value), requestParameterType);
+                _request.AddParameter(casheItem.Name.ToLowerInvariant(), ValueToQueryParameter(value), requestParameterType);
             }
+        }
+
+        /// <summary>
+        /// Выполняет поиск всех свойств класса с атрибутом <see cref="QueryParameterAttribute"/> и заполняет кэш параметров запроса соответствующими данными.
+        /// </summary>
+        private void InitQueryParametersCashe()
+        {
+            Type requestType = GetType();
+
+            if (_queryParametersCashe.ContainsKey(requestType))
+            {
+                return;
+            }
+
+            var casheItems =
+                from propertyInfo in requestType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                let attributesArray = propertyInfo.GetCustomAttributes(typeof(QueryParameterAttribute), true)
+                where attributesArray.Length == 1
+                let attribute = attributesArray[0] as QueryParameterAttribute
+                select new QueryParametersCasheItem
+                {
+                    Name = string.IsNullOrWhiteSpace(attribute.Name) ? propertyInfo.Name : attribute.Name,
+                    ParameterType = attribute.ParameterType,
+                    PropertyInfo = propertyInfo
+                };
+
+            _queryParametersCashe.TryAdd(requestType, casheItems.ToList());
         }
     }
 }
