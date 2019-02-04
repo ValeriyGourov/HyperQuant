@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Bitfinex.Connector.Models;
-using Bitfinex.Connector.Models.Request;
+using Bitfinex.Connector.Models.RestRequest;
 using Bitfinex.Domain;
 
 namespace Bitfinex.Connector

@@ -9,7 +9,7 @@ using Bitfinex.Connector.Infrastructure;
 using Newtonsoft.Json;
 using RestSharp;
 
-namespace Bitfinex.Connector.Models.Request
+namespace Bitfinex.Connector.Models.RestRequest
 {
     /// <summary>
     /// Базовая функциональность классов запросов к серверу.
@@ -40,7 +40,7 @@ namespace Bitfinex.Connector.Models.Request
         /// <summary>
         /// Запрос, который будет отправлен на сервер для выполнения требуемой операции с данными.
         /// </summary>
-        protected RestRequest _request;
+        protected RestSharp.RestRequest _request;
 
         /// <summary>
         /// Имя конкретной конечной точки, к которой должен быть выполнен запрос. Используется для формирования адреса ресурса сервера. Например: "trades".
@@ -59,7 +59,7 @@ namespace Bitfinex.Connector.Models.Request
         {
             InitQueryParametersCashe();
 
-            _request = new RestRequest();
+            _request = new RestSharp.RestRequest();
         }
 
         /// <summary>

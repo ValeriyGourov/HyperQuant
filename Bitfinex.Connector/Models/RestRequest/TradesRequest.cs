@@ -7,7 +7,7 @@ using Bitfinex.Domain;
 
 [assembly: InternalsVisibleTo("Bitfinex.Connector.Tests")]
 
-namespace Bitfinex.Connector.Models.Request
+namespace Bitfinex.Connector.Models.RestRequest
 {
     internal class TradesRequest : RequestBase<IEnumerable<Trade>>
     {

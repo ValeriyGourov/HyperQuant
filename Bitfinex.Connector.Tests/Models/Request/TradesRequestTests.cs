@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Bitfinex.Connector.Models.Request;
+using Bitfinex.Connector.Models.RestRequest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Bitfinex.Connector.Tests.Models.Request
