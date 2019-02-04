@@ -11,19 +11,28 @@ namespace Bitfinex.Connector.Models.Request
 {
     internal class TradesRequest : RequestBase<IEnumerable<Trade>>
     {
-        private readonly Symbol _symbol;
+        #region Параметры строки запроса
 
-        [QueryStringParameter("limit")]
+        [QueryParameter(QueryParameterType.QueryString)]
         public int Limit { get; set; }
 
-        [QueryStringParameter("start")]
+        [QueryParameter(QueryParameterType.QueryString)]
         public int Start { get; set; }
 
-        [QueryStringParameter("end")]
+        [QueryParameter(QueryParameterType.QueryString)]
         public int End { get; set; }
 
-        [QueryStringParameter("sort")]
+        [QueryParameter(QueryParameterType.QueryString)]
         public int Sort { get; set; }
+
+        #endregion
+
+        #region Параметры пути запроса
+
+        [QueryParameter(QueryParameterType.UrlSegment)]
+        private Symbol Symbol { get; }
+
+        #endregion
 
         protected override sealed string EndpointName => "trades";
 
@@ -31,20 +40,10 @@ namespace Bitfinex.Connector.Models.Request
 
         public TradesRequest(string symbol)
         {
-            _symbol = new Symbol(symbol ?? throw new ArgumentNullException(nameof(symbol)));
+            Symbol = new Symbol(symbol ?? throw new ArgumentNullException(nameof(symbol)));
         }
 
-        public override async Task<IEnumerable<Trade>> ExecuteAsync()
-        {
-            _request.AddUrlSegment("symbol", _symbol);
-            List<List<string>> data = await GetDataAsync<List<List<string>>>().ConfigureAwait(false);
-            if (data == null)
-            {
-                return null;
-            }
-
-            return Convert(data);
-        }
+        public override Task<IEnumerable<Trade>> ExecuteAsync() => ExecuteAsync<List<List<string>>>(Convert);
 
         private List<Trade> Convert(List<List<string>> data)
         {
@@ -67,13 +66,13 @@ namespace Bitfinex.Connector.Models.Request
                 Trade trade = new Trade()
                 {
                     Id = item[0],
-                    Pair = _symbol.Label,
+                    Pair = Symbol.Label,
                     Time = DateTimeOffset.FromUnixTimeMilliseconds(mts),
                     Amount = System.Convert.ToDecimal(Math.Abs(amount)),
                     Side = amount > 0 ? tradeDirectionBuy : tradeDirectionSell
                 };
 
-                if (_symbol.Type == SymbolTypes.TradingPair)
+                if (Symbol.Type == SymbolType.TradingPair)
                 {
                     float price = float.Parse(item[3]);
                     trade.Price = System.Convert.ToDecimal(price);

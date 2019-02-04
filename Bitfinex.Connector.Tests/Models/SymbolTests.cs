@@ -53,7 +53,7 @@ namespace Bitfinex.Connector.Tests.Models
             const string symbolString = "tBTCUSD";
             Symbol symbol = new Symbol(symbolString);
 
-            Assert.AreEqual(symbol.Type, SymbolTypes.TradingPair);
+            Assert.AreEqual(symbol.Type, SymbolType.TradingPair);
         }
 
         [TestMethod]
@@ -62,7 +62,7 @@ namespace Bitfinex.Connector.Tests.Models
             const string symbolString = "fUSD";
             Symbol symbol = new Symbol(symbolString);
 
-            Assert.AreEqual(symbol.Type, SymbolTypes.FundingCurrency);
+            Assert.AreEqual(symbol.Type, SymbolType.FundingCurrency);
         }
 
         [TestMethod]

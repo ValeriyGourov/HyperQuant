@@ -9,7 +9,7 @@ namespace Bitfinex.Connector.Models
     {
         private string _symbolString;
 
-        public SymbolTypes Type { get; private set; }
+        public SymbolType Type { get; private set; }
         public string Label { get; private set; }
 
         public Symbol(string symbolString)
@@ -31,10 +31,10 @@ namespace Bitfinex.Connector.Models
             switch (prefix)
             {
                 case tradingPairPrefix:
-                    Type = SymbolTypes.TradingPair;
+                    Type = SymbolType.TradingPair;
                     break;
                 case fundingCurrencyPrefix:
-                    Type = SymbolTypes.FundingCurrency;
+                    Type = SymbolType.FundingCurrency;
                     break;
                 default:
                     throw new ArgumentException($"Префикс строки символа должен быть равен '{tradingPairPrefix}' или '{fundingCurrencyPrefix}'.", nameof(symbolString));
@@ -46,10 +46,10 @@ namespace Bitfinex.Connector.Models
             int length = 0;
             switch (Type)
             {
-                case SymbolTypes.TradingPair:
+                case SymbolType.TradingPair:
                     length = tradingPairLength;
                     break;
-                case SymbolTypes.FundingCurrency:
+                case SymbolType.FundingCurrency:
                     length = fundingCurrencyLength;
                     break;
             }
@@ -57,7 +57,6 @@ namespace Bitfinex.Connector.Models
             {
                 throw new ArgumentException(string.Format(message, Type, length), nameof(symbolString));
             }
-
 
             Label = symbolString.Substring(1).ToUpperInvariant();
             _symbolString = $"{prefix}{Label}";

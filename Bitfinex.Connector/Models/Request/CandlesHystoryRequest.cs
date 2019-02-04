@@ -11,20 +11,31 @@ namespace Bitfinex.Connector.Models.Request
 {
     internal class CandlesHystoryRequest : RequestBase<IEnumerable<Candle>>
     {
-        private readonly TimeFrame _timeFrame;
-        private readonly Symbol _symbol;
+        #region Параметры строки запроса
 
-        [QueryStringParameter("limit")]
+        [QueryParameter(QueryParameterType.QueryString)]
         public long Limit { get; set; }
 
-        [QueryStringParameter("start")]
+        [QueryParameter(QueryParameterType.QueryString)]
         public int Start { get; set; }
 
-        [QueryStringParameter("end")]
+        [QueryParameter(QueryParameterType.QueryString)]
         public int End { get; set; }
 
-        [QueryStringParameter("sort")]
+        [QueryParameter(QueryParameterType.QueryString)]
         public int Sort { get; set; }
+
+        #endregion
+
+        #region Параметры пути запроса
+
+        [QueryParameter(QueryParameterType.UrlSegment)]
+        private TimeFrame TimeFrame { get; }
+
+        [QueryParameter(QueryParameterType.UrlSegment)]
+        private Symbol Symbol { get; }
+
+        #endregion
 
         protected override sealed string EndpointName => "candles";
 
@@ -32,22 +43,11 @@ namespace Bitfinex.Connector.Models.Request
 
         public CandlesHystoryRequest(TimeFrame timeFrame, string symbol)
         {
-            _timeFrame = timeFrame;
-            _symbol = new Symbol(symbol ?? throw new ArgumentNullException(nameof(symbol)));
+            TimeFrame = timeFrame ?? throw new ArgumentNullException(nameof(timeFrame));
+            Symbol = new Symbol(symbol ?? throw new ArgumentNullException(nameof(symbol)));
         }
 
-        public override async Task<IEnumerable<Candle>> ExecuteAsync()
-        {
-            _request.AddUrlSegment("timeFrame", _timeFrame);
-            _request.AddUrlSegment("symbol", _symbol);
-            List<List<string>> data = await GetDataAsync<List<List<string>>>().ConfigureAwait(false);
-            if (data == null)
-            {
-                return null;
-            }
-
-            return Convert(data);
-        }
+        public override Task<IEnumerable<Candle>> ExecuteAsync() => ExecuteAsync<List<List<string>>>(Convert);
 
         private List<Candle> Convert(List<List<string>> data)
         {
@@ -71,7 +71,7 @@ namespace Bitfinex.Connector.Models.Request
 
                 Candle trade = new Candle()
                 {
-                    Pair = _symbol.Label,
+                    Pair = Symbol.Label,
                     OpenTime = DateTimeOffset.FromUnixTimeMilliseconds(mts),
                     OpenPrice = System.Convert.ToDecimal(open),
                     ClosePrice = System.Convert.ToDecimal(close),

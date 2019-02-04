@@ -1,6 +1,6 @@
 ﻿namespace Bitfinex.Connector.Models
 {
-    internal enum SymbolTypes
+    internal enum SymbolType
     {
         TradingPair,
         FundingCurrency
