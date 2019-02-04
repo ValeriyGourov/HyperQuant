@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -20,7 +19,7 @@ namespace Bitfinex.Connector.Models.RestRequest
         /// <summary>
         /// Кэш параметров запроса. Используется для предотвращения использования рефлексии при выполнении каждого запроса.
         /// </summary>
-        private static readonly ConcurrentDictionary<Type, List<QueryParametersCasheItem>> _queryParametersCashe = new ConcurrentDictionary<Type, List<QueryParametersCasheItem>>();
+        private static readonly ConcurrentBag<QueryParametersCasheItem> _queryParametersCashe = new ConcurrentBag<QueryParametersCasheItem>();
 
         /// <summary>
         /// Имя сегмента конечно точки запроса.
@@ -169,8 +168,10 @@ namespace Bitfinex.Connector.Models.RestRequest
         /// </summary>
         private void AddQueryParameters()
         {
-            _queryParametersCashe.TryGetValue(GetType(), out List<QueryParametersCasheItem> casheItems);
-            casheItems.ForEach(item => AddQueryParameter(item));
+            foreach (QueryParametersCasheItem item in _queryParametersCashe)
+            {
+                AddQueryParameter(item);
+            }
         }
 
         /// <summary>
@@ -225,12 +226,12 @@ namespace Bitfinex.Connector.Models.RestRequest
         /// </summary>
         private void InitQueryParametersCashe()
         {
-            Type requestType = GetType();
-
-            if (_queryParametersCashe.ContainsKey(requestType))
+            if (_queryParametersCashe.Count > 0)
             {
                 return;
             }
+
+            Type requestType = GetType();
 
             var casheItems =
                 from propertyInfo in requestType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -244,7 +245,10 @@ namespace Bitfinex.Connector.Models.RestRequest
                     PropertyInfo = propertyInfo
                 };
 
-            _queryParametersCashe.TryAdd(requestType, casheItems.ToList());
+            foreach (QueryParametersCasheItem item in casheItems)
+            {
+                _queryParametersCashe.Add(item);
+            }
         }
     }
 }
