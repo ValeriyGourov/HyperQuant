@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Bitfinex.Connector.Converters;
 using Bitfinex.Connector.Infrastructure;
 using Bitfinex.Domain;
 
@@ -11,6 +12,8 @@ namespace Bitfinex.Connector.Models.RestRequest
 {
     internal class TradesRequest : RequestBase<IEnumerable<Trade>>
     {
+        private readonly TradeConverter _tradesConverter;
+
         #region Параметры строки запроса
 
         [QueryParameter(QueryParameterType.QueryString)]
@@ -41,43 +44,18 @@ namespace Bitfinex.Connector.Models.RestRequest
         public TradesRequest(string symbol)
         {
             Symbol = new Symbol(symbol ?? throw new ArgumentNullException(nameof(symbol)));
+            _tradesConverter = new TradeConverter(Symbol);
         }
 
         public override Task<IEnumerable<Trade>> ExecuteAsync() => ExecuteAsync<List<List<string>>>(Convert);
 
         private List<Trade> Convert(List<List<string>> data)
         {
-            const int minRowNumber = 4;
-            const string tradeDirectionBuy = "buy";
-            const string tradeDirectionSell = "sell";
-
             var trades = new List<Trade>();
 
             foreach (List<string> item in data)
             {
-                if (item.Count < minRowNumber)
-                {
-                    throw new ApplicationException("Неверный формат ответа.");
-                }
-
-                long mts = long.Parse(item[1]);
-                float amount = float.Parse(item[2]);
-
-                Trade trade = new Trade()
-                {
-                    Id = item[0],
-                    Pair = Symbol.Label,
-                    Time = DateTimeOffset.FromUnixTimeMilliseconds(mts),
-                    Amount = System.Convert.ToDecimal(Math.Abs(amount)),
-                    Side = amount > 0 ? tradeDirectionBuy : tradeDirectionSell
-                };
-
-                if (Symbol.Type == SymbolType.TradingPair)
-                {
-                    float price = float.Parse(item[3]);
-                    trade.Price = System.Convert.ToDecimal(price);
-                }
-
+                Trade trade = _tradesConverter.FromListString(item);
                 trades.Add(trade);
             }
 
