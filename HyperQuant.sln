@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bitfinex.Connector", "Bitfi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Bitfinex.Connector.Tests", "Bitfinex.Connector.Tests\Bitfinex.Connector.Tests.csproj", "{6F14D2EE-B648-4FF8-B4EF-0AD71173C982}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSocketTest", "WebSocketTest\WebSocketTest.csproj", "{3144FDD4-860B-4B90-BC4D-AACBA8D6A2B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{6F14D2EE-B648-4FF8-B4EF-0AD71173C982}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F14D2EE-B648-4FF8-B4EF-0AD71173C982}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F14D2EE-B648-4FF8-B4EF-0AD71173C982}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3144FDD4-860B-4B90-BC4D-AACBA8D6A2B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3144FDD4-860B-4B90-BC4D-AACBA8D6A2B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3144FDD4-860B-4B90-BC4D-AACBA8D6A2B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3144FDD4-860B-4B90-BC4D-AACBA8D6A2B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -18,4 +18,8 @@
     <ProjectReference Include="..\Bitfinex.Connector\Bitfinex.Connector.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\WebSockeSubscription\" />
+  </ItemGroup>
+
 </Project>
